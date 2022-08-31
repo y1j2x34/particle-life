@@ -1,11 +1,13 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+
 extern crate wasm_bindgen;
 
-use wasm_bindgen::prelude::*;
-use rand;
-use serde::{ Serialize, Deserialize };
-use js_sys::{ Object, Reflect };
+use js_sys::{Object, Reflect, Math};
+use wasm_bindgen::{prelude::*, __rt::WasmRefCell};
 
-#[derive(Clone, Serialize, Deserialize)]
+
+#[derive(Clone)]
 pub struct Atom {
     x: f64,
     y: f64,
@@ -14,8 +16,6 @@ pub struct Atom {
     color: String
 }
 
-
-#[derive(Serialize, Deserialize)]
 pub struct ParticleWord {
     pub atoms: Vec<Atom>,
     pub width: i32,
@@ -34,15 +34,13 @@ impl ParticleWord {
         }
     }
 
-    fn applyRules(& mut self, rule: &Rule) {
+    fn apply_rules(& mut self, rule: &Rule) {
         let size = self.atoms.len();
 
         let mut i = 0;
         let mut j = 0;
 
         while i < size {
-            let mut fx = 0;
-            let mut fy = 0;
             
             let atom_i_option = self.atoms.get(i);
 
@@ -102,6 +100,7 @@ impl ParticleWord {
                     fx = fx + f * dx;
                     fy = fy + f * dy;
                 }
+                j = j + 1
             } // j
             
             atom_i.vx = (atom_i.vx + fx) * 0.5;
@@ -133,16 +132,37 @@ impl ParticleWord {
                 atom_i.y = height;
             }
             self.atoms[i] = atom_i;
+
+            i = i + 1;
         } // i
     }
 
     fn random(& self) -> f64 {
-        rand::random::<f64>() * ((self.height - 100) * 50) as f64
+        Math::random() * ((self.height - 100) * 50) as f64
     }
     
 }
 
-#[wasm_bindgen]
-pub fn createParticleRule(width: i32, height: i32) {
-    ParticleWord::new(width, height)
+
+#[export_name = "ParticleWord_new"]
+pub extern "C" fn __wasm_bindgen_generated_ParticleWord_new(width: i32, height: i32) -> u32 {
+    let particle_word = ParticleWord::new(width, height);
+    Box::into_raw(Box::new(WasmRefCell::new(particle_word))) as u32
+}
+
+#[export_name = "ParticleWord_apply_rules"]
+pub extern "C" fn __wasm_bindgen_generated_ParticleWord_apply_rules(ptr: u32, rule: &Rule) {
+    let instance = ptr as *mut WasmRefCell<ParticleWord>;
+    wasm_bindgen::__rt::assert_not_null(instance);
+    let instance = unsafe { &* instance };
+
+    instance.borrow_mut().apply_rules(rule);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn __wbindgen_ParticleWord_free(ptr: u32) {
+    let instance = ptr as *mut WasmRefCell<ParticleWord>;
+    wasm_bindgen::__rt::assert_not_null(instance);
+    (*instance).borrow_mut();
+    drop(Box::from_raw(instance));
 }
