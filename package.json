@@ -1,0 +1,20 @@
+{
+  "name": "particle-life",
+  "version": "1.0.0",
+  "description": "",
+  "main": "worker.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/y1j2x34/particle-life.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/y1j2x34/particle-life/issues"
+  },
+  "homepage": "https://github.com/y1j2x34/particle-life#readme"
+}

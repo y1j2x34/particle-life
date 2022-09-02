@@ -7,13 +7,72 @@
     <title>Document</title>
 </head>
 <body>
+    <script>
+        function createDefer() {
+            let resolve, reject;
+            const promise = new Promise((_resolve, _reject) => {
+                resolve = _resolve;
+                reject = _reject;
+            });
+            return {
+                promise, resolve, reject
+            };
+        }
+    </script>
     <script type="module">
-        import init from './pkg/particle_life.js';
-        init().then((instance) => {
-            console.log(instance, init);
-            let ptr = instance.ParticleWord_new(100, 1000, JSON.stringify( { red: {red: 1} } ));
-            instance.ParticleWord_apply_rules(ptr);
-        })
+        const width = 800;
+        const height = 600;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        document.body.appendChild(canvas);
+
+
+        const worker = new Worker('./worker.js', {
+            type: 'module'
+        });
+
+
+        const ofscreenCanvas = canvas.transferControlToOffscreen();
+
+        (async () => {
+            const wordId = await callRemote('createNewParticleWord', [{
+                width, height, canvas: ofscreenCanvas, rule: {
+                    red: {
+                        red: 0
+                    }
+                }
+            }], [ofscreenCanvas]);
+
+            const taskId = await callRemote('play', [wordId]);
+            console.log(wordId, taskId);
+        })();
+
+
+
+        function callRemote(action, args, transfers = []) {
+            const callId = performance.now().toString(32);
+            
+            const defer = createDefer();
+            worker.addEventListener('message', function listener(e) {
+                if(!e.data || e.data.callId !== callId) {
+                    return 
+                }
+                if('result' in e.data) {
+                    defer.resolve(e.data.result);
+                } else {
+                    defer.reject(e.data.error);
+                }
+                window.removeEventListener('message', listener);
+            });
+            worker.postMessage({
+                action, args, callId
+            }, {
+                transfer: transfers
+            });
+            return defer.promise;
+        }
+
     </script>
 </body>
 </html>
