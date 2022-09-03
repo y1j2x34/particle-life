@@ -13,9 +13,9 @@ const words = {};
 const tasks = {};
 
 const handlers = {
-    createNewParticleWord({width, height, rule, canvas}) {
+    createNewParticleWord({width, height, rule, canvas, atomsCount}) {
         const wordId = uniqId();
-        words[wordId] = new ParticleWord(width, height, rule, canvas);
+        words[wordId] = new ParticleWord(width, height, rule, canvas, atomsCount);
         return wordId;
     },
     play(wordId) {
@@ -26,23 +26,18 @@ const handlers = {
         const taskId = uniqId();
         let stopped = false;
 
-        const timmerId = setInterval(() => {
-            // word.tick();
-        }, 1);
-
         (function loop() {
             if(stopped) {
                 return;
             }
-            requestAnimationFrame(() => {
-                word.render();
-                word.tick();
-                loop();
-            });
+            let start = performance.now();
+            word.apply_rules();
+            console.log('apply_rules takes:', performance.now() - start, 'ms');
+            word.render();
+            requestAnimationFrame(loop);
         })();
         tasks[taskId] = () => {
             stopped = true;
-            clearInterval(timmerId);
             delete tasks[taskId];
         };
         return taskId;
@@ -59,10 +54,10 @@ const handlers = {
 
 class ParticleWord {
     constructor(width, height, rule, canvas) {
-        this.ptr = new_ParticleWord(width, height, JSON.stringify(rule), canvas.getContext('2d'));
+        this.ptr = new_ParticleWord(width, height, JSON.stringify(rule), canvas.getContext('2d'), 500);
         this.canvas = canvas;
     }
-    tick() {
+    apply_rules() {
         apply_rules(this.ptr);
     }
     render() {
