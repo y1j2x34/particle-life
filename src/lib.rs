@@ -21,6 +21,9 @@ extern "C" {
     fn logs(s: String);
     #[wasm_bindgen(js_namespace = console)]
     fn error(s: &str);
+
+    #[wasm_bindgen(js_namespace = self, js_name = performance_now)]
+    fn now() -> f64;
 }
 
 pub struct Atom {
@@ -50,7 +53,6 @@ impl ParticleWord {
             panic!("error");
         }
         let rule = ruleResult.unwrap();
-        log(format!("rule: {:?}", &rule).as_str());
 
         ParticleWord {
             atoms: Vec::new(),
@@ -152,8 +154,8 @@ impl ParticleWord {
                 self.atoms.push(
                     RefCell::new(
                         Atom {
-                            x: Math::random() * self.width as i64 as f64,
-                            y: Math::random() * self.height as i64 as f64,
+                            x: Math::random() * self.width as f64,
+                            y: Math::random() * self.height as f64,
                             vx: 0.0,
                             vy: 0.0,
                             color: color.to_string()
@@ -186,7 +188,6 @@ impl ParticleWord {
 
 #[wasm_bindgen]
 pub fn new_ParticleWord(width: f64, height: f64, ruleJson: String, context: web_sys::CanvasRenderingContext2d, atomsCount: i32) -> u32 {
-    log(format!("rule json: {:?}, width: {}, height: {} ", ruleJson, width, height).as_str());
     let mut particle_word = ParticleWord::new(width, height, ruleJson, context);
     particle_word.prepare(atomsCount);
     Box::into_raw(Box::new(WasmRefCell::new(particle_word))) as u32

@@ -6,6 +6,9 @@ const uniqId = (() => {
 })();
 
 
+self.performance_now = () => {
+    return performance.now();
+};
 
 const initPromise = init();
 
@@ -30,9 +33,9 @@ const handlers = {
             if(stopped) {
                 return;
             }
-            let start = performance.now();
+            // let start = performance.now();
             word.apply_rules();
-            console.log('apply_rules takes:', performance.now() - start, 'ms');
+            // console.log('apply_rules takes:', performance.now() - start, 'ms');
             word.render();
             requestAnimationFrame(loop);
         })();
@@ -53,8 +56,8 @@ const handlers = {
 
 
 class ParticleWord {
-    constructor(width, height, rule, canvas) {
-        this.ptr = new_ParticleWord(width, height, JSON.stringify(rule), canvas.getContext('2d'), 500);
+    constructor(width, height, rule, canvas, atomsCount) {
+        this.ptr = new_ParticleWord(width, height, JSON.stringify(rule), canvas.getContext('2d'), atomsCount);
         this.canvas = canvas;
     }
     apply_rules() {
